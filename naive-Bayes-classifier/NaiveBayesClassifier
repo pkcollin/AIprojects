@@ -1,0 +1,164 @@
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.math.BigDecimal;
+
+public class NaiveBayesClassifier {
+	
+	static double total;
+	static ArrayList<String[]> trainD;
+	static double probR;
+	static double probD;
+	static double dems;
+	static double reps;
+
+	
+	public static void main(String[] args) throws IOException{
+		probR = 0;
+		total = 0;
+		trainD = new ArrayList<String[]>();
+
+		total = 0;
+		BufferedReader br = new BufferedReader(new FileReader(args[0]));
+		BufferedReader b = new BufferedReader(new FileReader(args[1]));
+		String dog = "";
+		
+		//Get input
+		while((dog = br.readLine())!=null){
+			total++;
+			String[] trainer = dog.split(",");
+			if(trainer[0].equals("republican")){
+				trainer[0] = "r";
+				reps++;
+			}else{
+				trainer[0] = "d";
+				dems++;
+			}
+			trainD.add(trainer);
+		}
+		dog = "";
+		probR = (double)reps/(double)total;
+		probD = (double)dems/(double)total;
+		
+		while((dog = b.readLine()) != null){
+			String[] testData = dog.split(",");
+			double bob = probRgiven(testData);
+			if(bob < 0.5){
+				System.out.println("democrat," + (1.0 - bob));
+			}else{
+				System.out.println("republican," + bob);
+			}
+		}
+		
+		//End get Input
+		/*for(int i =0; i<trainD.size(); i++){
+			for(int j =0; j <trainD.get(i).length; j++){
+			System.out.print(trainD.get(i)[j]);
+			}
+			System.out.println();
+			for(int wee = 0; wee < duck.length; wee++){
+			System.out.println(duck[wee]);
+			}
+		}*/
+		
+		b.close();br.close();
+	}
+	
+	
+	
+	public static double probRgiven(String[] duck){
+		double c = (probNYgivenR(duck))/(probNYgivenR(duck)+probNYgivenD(duck));
+		
+		return c;
+	}
+	
+	public static double probNYgivenR(String[] duck){
+		double[] duckTails = new double[duck.length];
+		
+		for(int i = 0; i<duck.length; i++){
+			double matched = 0.0;
+			for(int j = 0; j<trainD.size(); j++){
+				if(trainD.get(j)[0].equals("r")){
+					if(duck[i].equals(trainD.get(j)[i + 1])){
+						matched++;
+					}
+				}
+			}
+			duckTails[i] = matched/reps;
+			if(duckTails[i] == 0.0){
+				duckTails[i] = 1/total;
+			}
+			//System.out.println(duckTails[i]);
+		}
+		BigDecimal bd = new BigDecimal(duckTails[0]);
+		
+		for(int i = 1; i<duckTails.length; i++){
+			BigDecimal big = new BigDecimal(duckTails[i]);
+			
+			bd = bd.multiply(big);
+		}
+		return bd.doubleValue()*probR;
+	}
+	
+	public static double probNYgivenD(String[] duck){
+		double[] duckTails = new double[duck.length];
+		
+		for(int i = 0; i<duck.length; i++){
+			double matched = 0.0;
+			for(int j = 0; j<trainD.size(); j++){
+				if(trainD.get(j)[0].equals("d")){
+					if(duck[i].equals(trainD.get(j)[i + 1])){
+						matched++;
+					}
+				}
+			}
+			duckTails[i] = matched/dems;
+			if(duckTails[i] == 0.0){
+				duckTails[i] = 1/total;
+			}
+			//System.out.println(duckTails[i]);
+		}
+		BigDecimal bd = new BigDecimal(duckTails[0]);
+		
+		for(int i = 1; i<duckTails.length; i++){
+			BigDecimal big = new BigDecimal(duckTails[i]);
+			
+			bd = bd.multiply(big);
+		}
+		return bd.doubleValue()*probD;
+	}
+	
+	public static double probNY(String[] duck){
+		double[] duckTails = new double[duck.length];
+		
+		for(int i = 0; i<duck.length; i++){
+			double matched = 0.0;
+			
+			
+			for(int j = 0; j<trainD.size(); j++){
+					if(duck[i].equals(trainD.get(j)[i + 1])){
+						matched++;
+				}
+			}
+			duckTails[i] = matched / reps;
+			if(duckTails[i] == 0.0){
+				duckTails[i] = 1/total;
+			}
+	}
+		BigDecimal bd = new BigDecimal(duckTails[0]);
+		for(int i = 1; i<duckTails.length; i++){
+			BigDecimal big = new BigDecimal(duckTails[i]);
+			bd = bd.multiply(big);
+		}
+		return bd.doubleValue();
+	}
+}
+
+
+
+
+
+
+
