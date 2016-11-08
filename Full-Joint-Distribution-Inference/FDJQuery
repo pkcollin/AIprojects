@@ -1,0 +1,245 @@
+
+import java.io.*;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+
+public class FJDQuery {
+	
+	int buy = 0;
+	int maint = 1;
+	int door = 2;
+	int persons = 3;
+	int lug = 4;
+	int safety = 5;
+	int car = 6;
+	
+	double carDataSize = 1728;
+	DecimalFormat myFormat = new DecimalFormat("0.00000");
+	
+	public class Pair{
+		String word;
+		double count;
+		public Pair(String a){
+			count =1;
+			word = a;
+		}
+	}
+	
+	
+	public static void main (String[] args)throws IOException{
+		
+	//File carData = new File( "car.data");
+	BufferedReader br = null;
+
+	try {
+        br = new BufferedReader(new FileReader(args[0]));
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+    }
+	
+	String line = "";
+	String dog = "";
+	String cat = "";
+	int count = 0;
+	
+	while((line = br.readLine()) != null){
+		if(count == 0){
+		dog = line;
+		count ++;
+		}else{
+			cat = cat + line + "\n";
+		}
+	}
+	dog = dog.trim();
+	cat = cat.trim();
+
+	FJDQuery fjd = new FJDQuery(dog, cat);
+	
+	
+	if(!dog.contains(" ")){
+	fjd.gProb();
+	}else{
+		fjd.gProbGiven();
+	}
+	
+	br.close();
+    }
+	
+	
+	String[] prob;
+	String[] given;
+	ArrayList<Integer> probn;
+	
+	public FJDQuery(String a, String b){
+		a= a.trim();
+		b = b.trim();
+		prob = a.split(" ");
+		given = b.split("\n");
+		probn = new ArrayList<Integer>();
+		
+		for(int i =0; i<prob.length; i++){
+			String p = prob[i];
+		if(p.equals("buying")){ probn.add(buy); }
+		if(p.equals( "maint")){ probn.add(maint); }
+		if(p.equals("door")){ probn.add(door); }
+		if(p.equals("persons")){ probn.add(persons); }
+		if(p.equals( "lug_boot")){ probn.add(lug); }
+		if(p.equals("safety")){ probn.add(safety);}
+		if(p.equals("car")){ probn.add(car); }
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	public void gProb() throws IOException{
+		BufferedReader b = new BufferedReader(new FileReader("car.data"));
+		String t = "";
+		ArrayList<Pair> al = new ArrayList<Pair>();
+		while((t=b.readLine()) != null){
+			boolean got = false;
+			String[] words = t.split(",");
+			
+			
+			
+			for(int i =0; i<al.size(); i++){
+				if(al.get(i).word.equals(words[probn.get(0)])){
+					al.get(i).count++;
+					got = true;
+				}
+			}
+			
+			if(!got){
+				Pair p = new Pair(words[probn.get(0)]);
+				al.add(p);
+			}
+			
+		}
+		
+		orderList(al);
+		for(int i=0; i<al.size(); i++){
+			double p = al.get(i).count/carDataSize;
+			String myD = myFormat.format(p);
+			System.out.println(al.get(i).word + " " + myD);
+		}
+		
+		b.close();
+	}
+	
+	
+	
+	
+	
+	
+	
+	public void gProbGiven() throws IOException{
+		BufferedReader b = new BufferedReader(new FileReader("car.data"));
+		String t = "";
+		ArrayList<Pair> al = new ArrayList<Pair>();
+		int dataSize = 0;
+		while((t=b.readLine()) != null){
+			boolean got = false;
+			boolean hasGiven = true;
+			String[] words = t.split(",");
+			
+			String theLine = "";
+			
+			for(int i = 0; i<given.length; i++){
+				int skip = 0;
+				String[] give = given[i].split(" ");
+				//System.out.println(give.length);
+				if(give[0].equals("buying")){ if(check(buy, give, words) == false){hasGiven = false; break;} }
+				if(give[0].equals( "maint")){ if(check(maint, give, words) == false){hasGiven = false; break;} }
+				if(give[0].equals("door")){ if(check(door, give, words) == false){hasGiven = false; break;} }
+				if(give[0].equals("persons")){ if(check(persons, give, words) == false){hasGiven = false; break;} }
+				if(give[0].equals( "lug_boot")){ if(check(lug, give, words) == false){hasGiven = false; break;} }
+				if(give[0].equals("safety")){ if(check(safety, give, words) == false){hasGiven = false; break;}}
+				if(give[0].equals("car")){ if(check(car, give, words) == false){hasGiven = false; break;} }
+			}
+			
+			
+			if(hasGiven){
+				dataSize++;
+			for(int i = 0; i < probn.size(); i++){
+				theLine = theLine + words[probn.get(i)] + " ";
+			}
+			
+			for(int i =0; i<al.size(); i++){
+				if(al.get(i).word.equals(theLine)){
+					al.get(i).count++;
+					got=true;
+				}
+			}
+			
+			
+			if(!got){
+				Pair p = new Pair(theLine);
+				al.add(p);
+			}
+			
+		}
+		}
+		
+		orderList(al);
+		for(int i=0; i<al.size(); i++){
+			double p = al.get(i).count/dataSize;
+			String myD = myFormat.format(p);
+			System.out.println(al.get(i).word + " " + myD);
+		}
+		
+		b.close();
+		
+		
+		
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+public void orderList(ArrayList<Pair> b){
+		for(int i = 0; i < b.size() - 1; i++){
+			double max = b.get(i).count;
+			for(int j = i+1; j<b.size(); j++){
+				if(b.get(j).count > max){
+					max = b.get(j).count;
+					Pair temp = b.get(i);
+					b.set(i, b.get(j));
+					b.set(j, temp);
+					
+				}
+			}
+		}
+	}
+	
+	
+	
+	public boolean check(int a, String[] g, String[] w){
+		if(g.length == 0){
+			return true;
+		}
+		for(int i =1; i< g.length; i++){
+			if(w[a].equals(g[i])){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}
+
